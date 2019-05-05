@@ -213,3 +213,25 @@ Route::group(['prefix' => 'packs'], function () {
 
     Route::delete('/view/{pack}', 'PackController@destroy');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Mods Controller Routes
+|--------------------------------------------------------------------------
+|
+| Endpoint: /admin/mods
+|
+*/
+Route::group(['prefix' => 'mods'], function () {
+    Route::get('/', 'ModController@index')->name('admin.mods');
+    Route::get('/new', 'ModController@create')->name('admin.mods.new');
+    Route::get('/new/template', 'ModController@newTemplate')->name('admin.mods.new.template');
+    Route::get('/view/{mod}', 'ModController@view')->name('admin.mods.view');
+
+    Route::post('/new', 'ModController@store');
+    Route::post('/view/{mod}/export/{files?}', 'ModController@export')->name('admin.mods.view.export');
+
+    Route::patch('/view/{mod}', 'ModController@update');
+
+    Route::delete('/view/{mod}', 'ModController@destroy');
+});

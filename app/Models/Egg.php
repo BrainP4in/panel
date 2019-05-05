@@ -265,4 +265,9 @@ class Egg extends Model implements CleansAttributes, ValidableContract
     {
         return $this->belongsTo(self::class, 'config_from');
     }
+
+    public function mods()
+    {
+        return $this->hasMany(Mods::class);
+    }
 }

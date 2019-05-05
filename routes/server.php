@@ -39,7 +39,7 @@ Route::group(['prefix' => 'settings'], function () {
 Route::group(['prefix' => 'databases'], function () {
     Route::get('/', 'DatabaseController@index')->name('server.databases.index');
 
-    Route::post('/new', 'DatabaseController@store')->name('server.databases.new');
+    Route::post('/new', 'DatabaseController@store')->name('server.databases.new'); 
 
     Route::patch('/password', 'DatabaseController@update')->middleware('server..database')->name('server.databases.password');
 
@@ -107,3 +107,16 @@ Route::group(['prefix' => 'schedules'], function () {
         Route::delete('/view/{schedule}', 'Tasks\TaskManagementController@delete');
     });
 });
+
+/*
+|--------------------------------------------------------------------------
+| Server Mod Controller Routes
+|--------------------------------------------------------------------------
+|
+| Endpoint: /server/{server}/mods
+|
+*/
+Route::group(['prefix' => 'mods'], function () {
+    Route::get('/', 'ModInstallController@index')->name('server.mods');
+    Route::post('/new/', 'ModInstallController@store')->name('server.mods.new');
+}); 

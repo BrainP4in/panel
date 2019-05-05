@@ -12,6 +12,10 @@ Route::group(['prefix' => '/scripts'], function () {
     Route::get('/{uuid}', 'EggInstallController@index')->name('api.remote.scripts');
 });
 
+Route::group(['prefix' => '/modscripts'], function () {
+    Route::get('/{uuid}/{id}', 'ModInstallController@index')->name('api.remote.modscripts');
+});
+
 Route::group(['prefix' => '/sftp'], function () {
     Route::post('/', 'SftpController@index')->name('api.remote.sftp');
 });

@@ -131,4 +131,18 @@ class ServerRepository extends BaseRepository implements ServerRepositoryInterfa
 
         return $this->getHttpClient()->request('DELETE', 'keys/' . $key);
     }
+
+
+        /**
+     * Return details on a specific server.
+     *
+     * @return \Psr\Http\Message\ResponseInterface
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function installMod($data): ResponseInterface
+    {
+        return $this->getHttpClient()->request('POST', 'server/mods/install', [
+            'json' => $data
+        ]);
+    }
 }

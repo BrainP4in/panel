@@ -171,6 +171,17 @@
                                     </a>
                                 </li>
                             @endcan
+                            @can('install-mods', $server)
+                                <li
+                                    @if(starts_with(Route::currentRouteName(), 'server.mods'))
+                                    class="active"
+                                    @endif
+                                >
+                                    <a href="{{ route('server.mods', $server->uuidShort)}}">
+                                        <i class="fa fa-cubes"></i> <span>Mods</span>
+                                    </a>
+                                </li>
+                            @endcan
                             @if(Gate::allows('view-startup', $server) || Gate::allows('access-sftp', $server) ||  Gate::allows('view-allocations', $server))
                                 <li class="treeview
                                     @if(starts_with(Route::currentRouteName(), 'server.settings'))

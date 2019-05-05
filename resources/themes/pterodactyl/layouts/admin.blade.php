@@ -132,6 +132,11 @@
                                 <i class="fa fa-archive"></i> <span>Packs</span>
                             </a>
                         </li>
+                        <li class="{{ ! starts_with(Route::currentRouteName(), 'admin.mods') ?: 'active' }}">
+                            <a href="{{ route('admin.mods') }}">
+                                <i class="fa fa-cubes"></i> <span>Mods</span>
+                            </a>
+                        </li>
                     </ul>
                 </section>
             </aside>
