@@ -29,6 +29,9 @@ class SettingsServiceProvider extends ServiceProvider
         'pterodactyl:console:count',
         'pterodactyl:console:frequency',
         'pterodactyl:auth:2fa_required',
+        'oauth2:enabled',
+        'oauth2:required',
+        'oauth2:all_drivers',
     ];
 
     /**

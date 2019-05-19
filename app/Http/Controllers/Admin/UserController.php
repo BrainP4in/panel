@@ -7,6 +7,7 @@ use Pterodactyl\Models\User;
 use Prologue\Alerts\AlertsMessageBag;
 use Pterodactyl\Exceptions\DisplayException;
 use Pterodactyl\Http\Controllers\Controller;
+use Pterodactyl\Traits\Helpers\OAuth2Providers;
 use Illuminate\Contracts\Translation\Translator;
 use Pterodactyl\Services\Users\UserUpdateService;
 use Pterodactyl\Traits\Helpers\AvailableLanguages;
@@ -14,15 +15,21 @@ use Pterodactyl\Services\Users\UserCreationService;
 use Pterodactyl\Services\Users\UserDeletionService;
 use Pterodactyl\Http\Requests\Admin\UserFormRequest;
 use Pterodactyl\Contracts\Repository\UserRepositoryInterface;
+use Illuminate\Contracts\Config\Repository as ConfigRepository;
 
 class UserController extends Controller
 {
-    use AvailableLanguages;
+    use AvailableLanguages, OAuth2Providers;
 
     /**
      * @var \Prologue\Alerts\AlertsMessageBag
      */
     protected $alert;
+
+    /**
+     * @var \Illuminate\Contracts\Config\Repository
+     */
+    private $config;
 
     /**
      * @var \Pterodactyl\Services\Users\UserCreationService
@@ -61,6 +68,7 @@ class UserController extends Controller
      */
     public function __construct(
         AlertsMessageBag $alert,
+        ConfigRepository $config,
         UserCreationService $creationService,
         UserDeletionService $deletionService,
         Translator $translator,
@@ -68,6 +76,7 @@ class UserController extends Controller
         UserRepositoryInterface $repository
     ) {
         $this->alert = $alert;
+        $this->config = $config;
         $this->creationService = $creationService;
         $this->deletionService = $deletionService;
         $this->repository = $repository;
@@ -97,6 +106,7 @@ class UserController extends Controller
     {
         return view('admin.users.new', [
             'languages' => $this->getAvailableLanguages(true),
+            'enabled_providers' => $this->config->get('oauth2.enabled') ? implode(',', array_keys($this->getEnabledProviderSettings())) : '',
         ]);
     }
 
@@ -111,6 +121,7 @@ class UserController extends Controller
         return view('admin.users.view', [
             'user' => $user,
             'languages' => $this->getAvailableLanguages(true),
+            'enabled_providers' => $this->config->get('oauth2.enabled') ? implode(',', array_keys($this->getEnabledProviderSettings())) : '',
         ]);
     }
 
@@ -165,6 +176,7 @@ class UserController extends Controller
     public function update(UserFormRequest $request, User $user)
     {
         $this->updateService->setUserLevel(User::USER_LEVEL_ADMIN);
+
         $data = $this->updateService->handle($user, $request->normalize());
 
         if (! empty($data->get('exceptions'))) {

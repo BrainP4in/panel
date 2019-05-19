@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Pterodactyl\Http\Controllers\Controller;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Encryption\Encrypter;
+use Pterodactyl\Traits\Helpers\OAuth2Providers;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Pterodactyl\Contracts\Repository\UserRepositoryInterface;
@@ -18,7 +19,7 @@ use Illuminate\Contracts\Config\Repository as ConfigRepository;
 
 class LoginController extends Controller
 {
-    use AuthenticatesUsers;
+    use AuthenticatesUsers, OAuth2Providers;
 
     const USER_INPUT_FIELD = 'user';
 
@@ -103,6 +104,18 @@ class LoginController extends Controller
     }
 
     /**
+     * Show the application's login form.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function showLoginForm()
+    {
+        $providers = $this->getEnabledProviderSettings();
+
+        return view('auth.login', compact('providers'));
+    }
+
+    /**
      * Handle a login request to the application.
      *
      * @param \Illuminate\Http\Request $request
@@ -123,6 +136,10 @@ class LoginController extends Controller
         try {
             $user = $this->repository->findFirstWhere([[$useColumn, '=', $username]]);
         } catch (RecordNotFoundException $exception) {
+            return $this->sendFailedLoginResponse($request);
+        }
+
+        if ($this->config->get('oauth2.required') == 2 or ($user->root_admin == true and $this->config->get('oauth2.required') == 1)) {
             return $this->sendFailedLoginResponse($request);
         }
 

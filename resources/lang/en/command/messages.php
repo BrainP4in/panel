@@ -93,5 +93,14 @@ return [
             'redis_port' => 'Redis Port',
             'redis_pass_defined' => 'It seems a password is already defined for Redis, would you like to change it?',
         ],
+        'oauth2' => [
+            'no_packages' => 'No packages were installed as none of the providers require additional packages.',
+            'packages' => 'Preparing to install :number package(s).',
+            'installing' => 'Installing :package...',
+            'installed' => ':package installed.',
+            'failed' => ':package installation failed.',
+            'done' => ':number packages have been successfully installed.',
+            'done_failed' => ':number packages installation have failed.',
+        ],
     ],
 ];

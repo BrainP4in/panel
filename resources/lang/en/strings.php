@@ -85,4 +85,7 @@ return [
         'sat' => 'Saturday',
     ],
     'last_used' => 'Last Used',
+    'or' => 'Or',
+    'enabled' => 'Enabled',
+    'disabled' => 'Disabled',
 ];

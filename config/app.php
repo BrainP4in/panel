@@ -182,6 +182,7 @@ return [
         Pterodactyl\Providers\MacroServiceProvider::class,
         Pterodactyl\Providers\RepositoryServiceProvider::class,
         Pterodactyl\Providers\ViewComposerServiceProvider::class,
+        Pterodactyl\Providers\OAuth2ServiceProvider::class,
 
         /*
          * Additional Dependencies
@@ -189,6 +190,7 @@ return [
         Igaster\LaravelTheme\themeServiceProvider::class,
         Prologue\Alerts\AlertsServiceProvider::class,
         Lord\Laroute\LarouteServiceProvider::class,
+        SocialiteProviders\Manager\ServiceProvider::class,
     ],
 
     /*

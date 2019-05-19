@@ -76,6 +76,7 @@ class User extends Model implements
         'totp_authenticated_at',
         'gravatar',
         'root_admin',
+        'oauth2_id',
     ];
 
     /**
@@ -143,6 +144,7 @@ class User extends Model implements
         'password' => 'sometimes',
         'language' => 'sometimes',
         'use_totp' => 'sometimes',
+        'oauth2_id' => 'sometimes',
     ];
 
     /**
@@ -162,6 +164,7 @@ class User extends Model implements
         'language' => 'string',
         'use_totp' => 'boolean',
         'totp_secret' => 'nullable|string',
+        'oauth2_id' => 'nullable|string',
     ];
 
     /**
