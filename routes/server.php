@@ -118,5 +118,8 @@ Route::group(['prefix' => 'schedules'], function () {
 */
 Route::group(['prefix' => 'mods'], function () {
     Route::get('/', 'ModInstallController@index')->name('server.mods');
+    Route::get('/{mod}/install', 'ModInstallController@install')->name('server.mods.install');
+    Route::delete('/{mod}', 'ModInstallController@destroy');
+    Route::get('/{mod}/steamWorkshop/{modId}', 'ModInstallController@steamData');
     Route::post('/new/', 'ModInstallController@store')->name('server.mods.new');
 }); 

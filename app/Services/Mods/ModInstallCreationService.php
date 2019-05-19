@@ -5,6 +5,7 @@ namespace Pterodactyl\Services\Mods;
 use Ramsey\Uuid\Uuid;
 use Pterodactyl\Models\Mod;
 use Pterodactyl\Models\Mod_installed;
+use Pterodactyl\Models\Mod_installed_variable;
 use Pterodactyl\Contracts\Repository\ModRepositoryInterface;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 
@@ -20,6 +21,7 @@ use Pterodactyl\Models\Objects\DeploymentObject;
 use Pterodactyl\Services\Deployment\FindViableNodesService;
 use Pterodactyl\Contracts\Repository\EggRepositoryInterface;
 use Pterodactyl\Contracts\Repository\ServerRepositoryInterface;
+use Pterodactyl\Contracts\Repository\ModInstallVariableRepositoryInterface;
 use Pterodactyl\Services\Deployment\AllocationSelectionService;
 use Pterodactyl\Contracts\Repository\AllocationRepositoryInterface;
 use Pterodactyl\Exceptions\Http\Connection\DaemonConnectionException;
@@ -52,12 +54,16 @@ class ModInstallCreationService
         ConfigRepository $config, 
         ModRepositoryInterface $repository,
         ModInstallRepositoryInterface $installRepository,
-        DaemonServerRepositoryInterface $daemonServerRepository
+        DaemonServerRepositoryInterface $daemonServerRepository,
+        ModVariableValidatorService $validatorService,
+        ModInstallVariableRepositoryInterface $modVariableRepository
     ) {
         $this->config = $config;
         $this->repository = $repository;
         $this->installRepository = $installRepository;
         $this->daemonServerRepository = $daemonServerRepository;
+        $this->validatorService = $validatorService;
+        $this->modVariableRepository = $modVariableRepository;        
     }
 
 
@@ -70,18 +76,31 @@ class ModInstallCreationService
      * @return \Pterodactyl\Models\Nest
      * @throws \Pterodactyl\Exceptions\Model\DataValidationException
      */
-    public function handle(Server $server, Mod $mod,string $workshopModId,string $workshopModName) //: Mod_installed
+    public function handle(Server $server, Mod $mod, array $data) //: Mod_installed
     {
+
+        $modInstallData = array(
+            'server_id'    => $server->id,
+            'mod_id'       => $mod->id,
+        );
+
+        $modInstallation = $this->installRepository->create( $modInstallData, true, true);
+
+
+        $modVariableData = $this->validatorService
+        ->setUserLevel(User::USER_LEVEL_ADMIN)
+        ->handle(array_get($data, 'modId'), array_get($data, 'environment', []));
+
+        $this->storeModVariables($modInstallation, $modVariableData);
+
+
+        // modVariableData -> [{"id":3,"key":"steamModId","value":"fprzfs"}]
+        // modInstallation -> {"id":23,"created_at":"2019-05-14 09:17:38","updated_at":"2019-05-14 09:17:38","server_id":3,"mod_id":6}
+
         $data = array(
             'server'    => $server,
-            'mod'       => array(
-                "steam_name"=> $workshopModName,
-                "steam_id"=> $workshopModId, //$data->attribute->get('workshopModId')
-                "created_at"=> null,
-                "updated_at"=> null,
-                "server_id"=> $server->id,
-                "mod_id"=> $mod->id,
-                "mod"=> $mod)
+            'mod'       => $mod,
+            'variables' => $modVariableData
         );
         
         try {
@@ -91,7 +110,34 @@ class ModInstallCreationService
             throw new DaemonConnectionException($exception);
         }
 
-        return $this->installRepository->create($data['mod'], true, true);
+
+
+
+
+
+
+        return $modInstallation; // $modInstallation;
+    }
+
+        /**
+     * Process environment variables passed for this server and store them in the database.
+     *
+     * @param \Pterodactyl\Models\Mod     $server
+     * @param \Illuminate\Support\Collection $variables
+     */
+    private function storeModVariables(Mod_installed $mod, Collection $variables)
+    {
+        $records = $variables->map(function ($result) use ($mod) {
+            return [
+                'mod_installed_id' => $mod->id,
+                'variable_id' => $result->id,
+                'variable_value' => $result->value,
+            ];
+        })->toArray();
+
+        if (! empty($records)) {
+            $this->modVariableRepository->insert($records);
+        }
     }
 }
 

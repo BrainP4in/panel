@@ -32,6 +32,6 @@ interface ModInstallRepositoryInterface extends RepositoryInterface, SearchableI
      *
      * @throws \Pterodactyl\Exceptions\Repository\RecordNotFoundException
      */
-    //public function getWithCounts(int $id = null);
+    public function getWithVariables(int $id);
 
 }

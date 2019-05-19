@@ -21,11 +21,12 @@ use Pterodactyl\Traits\Controllers\JavascriptInjection;
 
 
 use Pterodactyl\Models\Mod;
+use Pterodactyl\Models\Mod_installed;
 use Pterodactyl\Services\Packs\ExportPackService;
 use Pterodactyl\Services\Mods\ModUpdateService;
 use Pterodactyl\Services\Mods\ModInstallCreationService;
-use Pterodactyl\Services\Mods\ModDeletionService;
-use Pterodactyl\Http\Requests\Admin\ModFormRequest;
+use Pterodactyl\Services\Mods\ModInstallDeletionService;
+use Pterodactyl\Http\Requests\Admin\ModInstallFormRequest;
 use Pterodactyl\Http\Requests\Admin\ModStoreFormRequest;
 use Pterodactyl\Services\Packs\TemplateUploadService;
 use Pterodactyl\Contracts\Repository\NestRepositoryInterface;
@@ -33,12 +34,13 @@ use Pterodactyl\Contracts\Repository\ModRepositoryInterface;
 use Pterodactyl\Contracts\Repository\ModInstallRepositoryInterface;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Pterodactyl\Contracts\Repository\Daemon\ServerRepositoryInterface;
+use Pterodactyl\Contracts\Repository\ModVariableRepositoryInterface;
 
 
 
 
 class ModInstallController extends Controller
-{
+{ 
 
     use JavascriptInjection;
 
@@ -105,11 +107,12 @@ class ModInstallController extends Controller
         ConfigRepository $config,
         ExportPackService $exportService,
         ModInstallCreationService $creationService,
-        ModDeletionService $deletionService,
+        ModInstallDeletionService $deletionService,
         ModRepositoryInterface $repository,
         ModUpdateService $updateService,
         ModRepositoryInterface $serviceRepository,
         ModInstallRepositoryInterface $installRepository,
+        ModVariableRepositoryInterface $variableRepository,
         TemplateUploadService $templateUploadService,
         ServerRepositoryInterface $serverRepository
 
@@ -124,6 +127,7 @@ class ModInstallController extends Controller
         $this->serviceRepository = $serviceRepository;
         $this->installRepository = $installRepository;
         $this->serverRepository = $serverRepository;
+        $this->variableRepository = $variableRepository;
         $this->templateUploadService = $templateUploadService;
 
 
@@ -143,22 +147,40 @@ class ModInstallController extends Controller
     {
         $server = $request->attributes->get('server');
 
-        $data = array(
-            'server'    =>  $server,
-            'mod'       =>  $this->installRepository->getInstalled($server->id)[0],
+        $getCustomName = function($mod){
 
-        );
-        $data = json_encode($data);
-        $data = ['json' => $data];
+            foreach ($mod->mod_installed_variable as $variable) {
+                if($variable->mod_variables->name == 'NAME'){
+                    return $variable->variable_value;
+                }
+            }
+            return $mod->mod->name;
+        };
+
+        $hasVariable = function($mod, $varName){
+
+            foreach ($mod->mod_installed_variable as $variable) {
+                if($variable->mod_variables->env_variable == $varName){
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        $this->setRequest($request)->injectJavascript();
 
         return view('server.mods.index', [
             'server_id' => $server->uuid,
             'installed' => $this->installRepository->getInstalled($server->id),
             'mods' => $this->repository->getAvailable($server->id, $server->nest_id),  //$this->repository->all()->where('egg_id', '=', $server->egg_id), //->paginated(50)->setSearchTerm($request->input('query'))
+            'getCustomName' => $getCustomName,
+            'hasVariable' => $hasVariable,
         ]);
         
 
-        //$mod = $this->creationService->handle($request->normalize());
+
+
+
 
         
 
@@ -173,11 +195,6 @@ class ModInstallController extends Controller
 
 
 
-
-
-
-
-
     }
 
     /**
@@ -187,10 +204,14 @@ class ModInstallController extends Controller
      *
      * @throws \Pterodactyl\Exceptions\Repository\RecordNotFoundException
      */
-    public function newTemplate()
+    public function install(Request $request, $server, Mod $mod)
     {
-        return view('admin.mods.modal', [
-            'nests' => $this->serviceRepository->getWithEggs(),
+        $server = $request->attributes->get('server');
+
+
+        return view('server.mods.install', [
+            'mod' => $mod,
+            'variables' => $this->variableRepository->getEditableVariables($mod->id)
         ]);
     }
 
@@ -207,19 +228,20 @@ class ModInstallController extends Controller
      * @throws \Pterodactyl\Exceptions\Service\Pack\UnreadableZipArchiveException
      * @throws \Pterodactyl\Exceptions\Service\Pack\ZipExtractionException
      */
-    public function store(ModStoreFormRequest $request,Mod $mod)
+    public function store(ModInstallFormRequest $request, $server)
     {
         $server = $request->attributes->get('server');
-
-        $workshopModId = $request->request->get('workshopModId');
-        $workshopModName = $request->request->get('workshopModName');
 
         $modId = $request->request->get('modId');
         $mod = $this->repository->all()->where('id', '=', $modId)->first();
 
-        $installedMod = $this->creationService->handle($server, $mod, $workshopModId, $workshopModName);
 
-        $this->alert->success(trans('mods.notices.mod_installed'))->flash();
+
+
+        $installedMod = $this->creationService->handle($server, $mod, $request->except('_token'));
+
+        //$this->alert->success(trans('mods.notices.mod_installed'))->flash();
+        $this->alert->success( $installedMod )->flash();
 
         return redirect()->route('server.mods', $server->uuid);
     }
@@ -267,14 +289,15 @@ class ModInstallController extends Controller
      * @throws \Pterodactyl\Exceptions\Repository\RecordNotFoundException
      * @throws \Pterodactyl\Exceptions\Service\HasActiveServersException
      */
-    public function destroy(Mod $mod)
+    public function destroy(Request $request, $server, $mod): Response
     {
-        $this->deletionService->handle($mod->id);
-        $this->alert->success(trans('admin/mod.notices.mod_deleted', [
-            'name' => $mod->name,
-        ]))->flash();
+        $server = $request->attributes->get('server');
 
-        return redirect()->route('admin.mods');
+        $this->authorize('save-files', $server);
+
+        $this->deletionService->handle($mod, $server);
+
+        return response('', 204);
     }
 
     /**
@@ -299,6 +322,41 @@ class ModInstallController extends Controller
             'Content-Type' => 'application/json',
         ])->deleteFileAfterSend(true);
     }
+
+
+    /**
+     * Creates an archive of the pack and downloads it to the browser.
+     *
+     * @param \Pterodactyl\Models\Pack $pack
+     * @param bool|string              $files
+     * @return \Symfony\Component\HttpFoundation\Response
+     *
+     * @throws \Pterodactyl\Exceptions\Repository\RecordNotFoundException
+     * @throws \Pterodactyl\Exceptions\Service\Pack\ZipArchiveCreationException
+     */
+    public function steamData(string $server, Mod $mod, string $steamId): Response
+    {
+        
+
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL,"https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/?key=9C3517C68EB8713E1ED83B880DCD4AFF");
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS,
+                    "itemcount=1&publishedfileids[0]=" . $steamId);
+
+        // Receive server response ...
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $server_output = curl_exec($ch);
+
+        curl_close ($ch);
+
+
+        return response($server_output,202);
+    }
+    
+
 
 
 

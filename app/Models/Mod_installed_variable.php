@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Sofa\Eloquence\Contracts\CleansAttributes;
 use Sofa\Eloquence\Contracts\Validable as ValidableContract;
 
-class Mod_installed extends Model implements CleansAttributes, ValidableContract
+class Mod_installed_variable extends Model implements CleansAttributes, ValidableContract
 {
     use Eloquence, Validable;
 
@@ -16,14 +16,14 @@ class Mod_installed extends Model implements CleansAttributes, ValidableContract
      * The resource name for this model when it is transformed into an
      * API representation using fractal.
      */
-    const RESOURCE_NAME = 'mod_installed';
+    const RESOURCE_NAME = 'mod_installed_variable';
 
     /**
      * The table associated with the model.
      *
      * @var string
      */
-    protected $table = 'mods_installed';
+    protected $table = 'mod_installed_variable';
 
     /**
      * Fields that are mass assignable.
@@ -31,22 +31,25 @@ class Mod_installed extends Model implements CleansAttributes, ValidableContract
      * @var array
      */
     protected $fillable = [
-        'mod_installed_id', 
+        'mod_installed_variable_id', 'variable_id', 'variable_value',
     ];
 
     /**
      * @var array
      */
     protected static $applicationRules = [
-
+        'name' => 'required',
+        'env_variable' => 'required',
+        'multiple' => 'sometimes',
+        'mod_id' => 'required',
+        'steam_username' => 'sometimes',
     ];
 
     /**
      * @var array
      */
     protected static $dataIntegrityRules = [
-        'mod_id' => 'exists:mods,id',
-        'server_id' => 'exists:servers,id',
+        'variable_id' => 'exists:mod_variables,id',
     ];
 
     /**
@@ -55,8 +58,7 @@ class Mod_installed extends Model implements CleansAttributes, ValidableContract
      * @var array
      */
     protected $casts = [
-        'mod_id' => 'integer',
-        'server_id' => 'integer',
+        'variable_id' => 'integer',
     ];
 
     /**
@@ -73,24 +75,9 @@ class Mod_installed extends Model implements CleansAttributes, ValidableContract
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function mod_installed()
+    public function mod_variables()
     {
-        return $this->belongsTo(Mod_installed::class);
-    }
-
-    public function mod()
-    {
-        return $this->belongsTo(Mod::class);
-    }
-
-    public function mod_installed_variable()
-    {
-        return $this->hasMany(Mod_installed_variable::class);
-    }
-
-    public function server()
-    {
-        return $this->belongsTo(Server::class);
+        return $this->belongsTo(Mod_variable::class, 'variable_id');
     }
 
 }

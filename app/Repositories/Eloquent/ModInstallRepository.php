@@ -42,6 +42,10 @@ class ModInstallRepository extends EloquentRepository implements ModInstallRepos
         
         $instance = $this->getBuilder()->with('mod')->where('server_id', $serverId);
 
+        $instance = $instance->with('mod_installed_variable');
+
+        $instance = $instance->with('mod_installed_variable.mod_variables');
+
         /*$instance = $this->getBuilder();
 
         if (! is_null($id)) {
@@ -64,21 +68,23 @@ class ModInstallRepository extends EloquentRepository implements ModInstallRepos
      *
      * @throws \Pterodactyl\Exceptions\Repository\RecordNotFoundException
      */
-    /*public function getWithCounts(int $id = null)
+    public function getWithVariables(int $id)
     {
-        $instance = $this->getBuilder()->withCount(['eggs', 'packs', 'servers']);
 
-        if (! is_null($id)) {
-            $instance = $instance->find($id, $this->getColumns());
-            if (! $instance) {
-                throw new RecordNotFoundException;
-            }
+        
+        $instance = $this->getBuilder()->with('mod')->where('id', $id);
 
-            return $instance;
+        $instance = $instance->with('mod_installed_variable');
+
+        $instance = $instance->with('mod_installed_variable.mod_variables')->first();
+
+        if (! $instance) {
+            throw new RecordNotFoundException;
         }
+        return $instance;
 
-        return $instance->get($this->getColumns());
+        return  $instance->get($this->getColumns());
     }
-    */
+
 
 }

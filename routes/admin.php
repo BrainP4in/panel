@@ -227,11 +227,18 @@ Route::group(['prefix' => 'mods'], function () {
     Route::get('/new', 'ModController@create')->name('admin.mods.new');
     Route::get('/new/template', 'ModController@newTemplate')->name('admin.mods.new.template');
     Route::get('/view/{mod}', 'ModController@view')->name('admin.mods.view');
+    Route::get('/view/{mod}/variables', 'ModController@variables')->name('admin.mods.variables');
 
     Route::post('/new', 'ModController@store');
     Route::post('/view/{mod}/export/{files?}', 'ModController@export')->name('admin.mods.view.export');
+    Route::post('/view/{mod}/variables', 'ModVariableController@store');
 
     Route::patch('/view/{mod}', 'ModController@update');
+    Route::patch('/view/{mod}/variables/{variable}', 'ModVariableController@update')->name('admin.mods.variables.edit');
 
     Route::delete('/view/{mod}', 'ModController@destroy');
+    Route::delete('/view/{mod}/variables/{variable}', 'ModVariableController@destroy');
+
 });
+
+

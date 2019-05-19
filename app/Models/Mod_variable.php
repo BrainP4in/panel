@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Sofa\Eloquence\Contracts\CleansAttributes;
 use Sofa\Eloquence\Contracts\Validable as ValidableContract;
 
-class Mod_installed extends Model implements CleansAttributes, ValidableContract
+class Mod_variable extends Model implements CleansAttributes, ValidableContract
 {
     use Eloquence, Validable;
 
@@ -16,14 +16,14 @@ class Mod_installed extends Model implements CleansAttributes, ValidableContract
      * The resource name for this model when it is transformed into an
      * API representation using fractal.
      */
-    const RESOURCE_NAME = 'mod_installed';
+    const RESOURCE_NAME = 'mod_variable';
 
     /**
      * The table associated with the model.
      *
      * @var string
      */
-    protected $table = 'mods_installed';
+    protected $table = 'mod_variables';
 
     /**
      * Fields that are mass assignable.
@@ -31,22 +31,29 @@ class Mod_installed extends Model implements CleansAttributes, ValidableContract
      * @var array
      */
     protected $fillable = [
-        'mod_installed_id', 
+        'mod_variable_id', 'mod_id', 'env_variable', 'default_value', 'name', 'description', 'rules', 'input_type', 'user_viewable', 'user_editable',
     ];
 
     /**
      * @var array
      */
     protected static $applicationRules = [
-
+        'name' => 'required',
+        'env_variable' => 'required',
+        'multiple' => 'sometimes',
+        'input_type' => 'required',
+        'mod_id' => 'required',
+        'user_viewable' => 'sometimes',
+        'user_editable' => 'sometimes',
     ];
 
     /**
      * @var array
      */
     protected static $dataIntegrityRules = [
+        'name' => 'string',
+        'install_script' => 'nullable|string',
         'mod_id' => 'exists:mods,id',
-        'server_id' => 'exists:servers,id',
     ];
 
     /**
@@ -56,7 +63,8 @@ class Mod_installed extends Model implements CleansAttributes, ValidableContract
      */
     protected $casts = [
         'mod_id' => 'integer',
-        'server_id' => 'integer',
+        'user_viewable' => 'integer',
+        'user_editable' => 'integer',
     ];
 
     /**
@@ -65,7 +73,8 @@ class Mod_installed extends Model implements CleansAttributes, ValidableContract
      * @var array
      */
     protected $searchableColumns = [
-
+        'name' => 10,
+        'id' => 8,
     ];
 
     /**
@@ -73,11 +82,6 @@ class Mod_installed extends Model implements CleansAttributes, ValidableContract
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function mod_installed()
-    {
-        return $this->belongsTo(Mod_installed::class);
-    }
-
     public function mod()
     {
         return $this->belongsTo(Mod::class);
@@ -87,10 +91,4 @@ class Mod_installed extends Model implements CleansAttributes, ValidableContract
     {
         return $this->hasMany(Mod_installed_variable::class);
     }
-
-    public function server()
-    {
-        return $this->belongsTo(Server::class);
-    }
-
 }

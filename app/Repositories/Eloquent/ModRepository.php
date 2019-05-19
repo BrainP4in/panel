@@ -39,7 +39,7 @@ class ModRepository extends EloquentRepository implements ModRepositoryInterface
     public function getWithEggs(int $id = null)
     {       // $instance = $this->getBuilder()->with('eggs.servers')->find($id, $this->getColumns());
 
-        $instance = $this->getBuilder();
+        $instance = $this->getBuilder()->with('egg');
 
         if (! is_null($id)) {
             $instance = $instance->find($id, $this->getColumns());
@@ -49,8 +49,33 @@ class ModRepository extends EloquentRepository implements ModRepositoryInterface
             return $instance;
         }
 
-        return null; //$instance->get($this->getColumns());
+        return $instance->get($this->getColumns());
     }
+    /**
+     * Return a nest or all nests with their associated eggs, variables, and packs.
+     *
+     * @param int $id
+     * @return \Illuminate\Database\Eloquent\Collection|\Pterodactyl\Models\Nest
+     *  
+     * @throws \Pterodactyl\Exceptions\Repository\RecordNotFoundException
+     */
+    public function getWithVars(int $id = null)
+    {       // $instance = $this->getBuilder()->with('eggs.servers')->find($id, $this->getColumns());
+
+        $instance = $this->getBuilder()->with('mod_variable');
+
+        if (! is_null($id)) {
+            $instance = $instance->find($id, $this->getColumns());
+            if (! $instance) {
+                throw new RecordNotFoundException;
+            }
+            return $instance;
+        }
+
+        return $instance->get($this->getColumns());
+    }
+
+
 
     /**
      * Return a nest or all nests and the count of eggs, packs, and servers for that nest.
@@ -93,8 +118,8 @@ class ModRepository extends EloquentRepository implements ModRepositoryInterface
             return $arrObject;
         } 
         
-        $instance = $this->getBuilder()->where('comprehensive', '=', true)->with('mod_installed')->leftJoin('mods_installed', 'mod_id', '=', 'mods.id')->where('mods_installed.mod_id', '=', NULL)->where('mods.steam_id', '=', NULL);
-        $instanceSteam = $this->getBuilder()->where('steam_id', '<>', NULL);
+        $instance = $this->getBuilder()->where('comprehensive', '=', true)->with('mod_installed')->leftJoin('mods_installed', 'mod_id', '=', 'mods.id')->where('mods_installed.mod_id', '=', NULL); //->where('mods.steam_id', '=', NULL);
+        $instanceSteam = $this->getBuilder(); //->where('steam_id', '<>', NULL);
         $instanceEgg = $this->getBuilder()->where('comprehensive', '=', true)->with('egg');
 
 
@@ -114,6 +139,31 @@ class ModRepository extends EloquentRepository implements ModRepositoryInterface
         }*/
 
         return $obj;
+    }
+
+
+    /**
+     * Return a nest or all nests with their associated eggs, variables, and packs.
+     *
+     * @param int $id
+     * @return \Illuminate\Database\Eloquent\Collection|\Pterodactyl\Models\Nest
+     *  
+     * @throws \Pterodactyl\Exceptions\Repository\RecordNotFoundException
+     */
+    public function getServers(int $id = null)
+    {
+
+        $instance = $this->getBuilder()->with('mod_installed')->with('mod_installed.server');
+
+        if (! is_null($id)) {
+            $instance = $instance->find($id, $this->getColumns());
+            if (! $instance) {
+                throw new RecordNotFoundException;
+            }
+            return $instance;
+        }
+
+        return $instance->get($this->getColumns());
     }
 
 }

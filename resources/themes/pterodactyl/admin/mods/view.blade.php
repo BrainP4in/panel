@@ -19,6 +19,16 @@
 @endsection
 
 @section('content')
+<div class="row">
+    <div class="col-xs-12">
+        <div class="nav-tabs-custom nav-tabs-floating">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="{{ route('admin.mods.view', $mod->id) }}">Configuration</a></li>
+                <li><a href="{{ route('admin.mods.variables', $mod->id) }}">Variables</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
 <form action="{{ route('admin.mods.view', $mod->id) }}" method="POST">
     <div class="row">
         <div class="col-md-6">
@@ -55,10 +65,14 @@
                         <p class="text-muted small">Check this box if the Mod is installable on the complete Nest and not only on the selected Egg.</p>
                     </div>
                     <div class="form-group">
-                        <label for="pSteamID" class="form-label">SteamID</label>
-                        <input name="steam_id" type="text" id="pSteamID" class="form-control" value="{{ $mod->steam_id }}" />
-                        <p class="text-muted small"><code>WIP</code> .</p>
-                    </div>
+                            <div class="checkbox checkbox-primary no-margin-bottom">
+                                <input id="pMultiple" name="multiple" type="checkbox" value="1" {{ ! $mod->multiple ?: 'checked' }}/>
+                                <label for="pMultiple">
+                                    Multiple
+                                </label>
+                            </div>
+                            <p class="text-muted small">Users can install multiple instances of this mod.</p>
+                        </div>
                 </div>
             </div>
         </div>
@@ -71,32 +85,71 @@
                     <div class="form-group no-margin-bottom">
 
                         <div class="box">
-                            <div class="box-header with-border">
-                                <h3 class="box-title">Install Script</h3>
-                            </div>
+                            <a data-toggle="collapse" href="#install_script_collapse">
+                                <div class="box-header with-border">
+                                    <h3 class="box-title">Install Script</h3>
+                                </div>
+                            </a>
 
-                            <div class="box-body no-padding">
+                            <div id="install_script_collapse" class="box-body no-padding panel-collapse collapse">
                                 <div id="install_script"style="height:300px">{{ $mod->install_script }}</div>
                             </div>
 
-                            <div class="box-body">
-                                <div class="row">
-                                    <div class="form-group col-sm-6">
-                                        <label class="control-label">Script Container</label>
-                                        <input type="text" name="install_script_container" class="form-control" value="{{ $mod->install_script_container }}" />
-                                        <p class="text-muted small">Docker container to use when running this script for the server. If empty, the server uses it's default container.</p>
-                                    </div>
-                                    <div class="form-group col-sm-6">
-                                        <label class="control-label">Script Entrypoint Command</label>
-                                        <input type="text" name="install_script_entry" class="form-control" value="{{ $mod->install_script_entry }}" />
-                                        <p class="text-muted small">The entrypoint command to use for this script.</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="box-footer">
+                            <div class="box-footer hidden">
                                 {!! csrf_field() !!}
                                 <textarea name="install_script" class="hidden"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="box">
+                            <a data-toggle="collapse" href="#update_script_collapse">
+                                <div class="box-header with-border">
+                                    <h3 class="box-title">Update Script</h3>
+                                </div>
+                            </a>
+
+                            <div id="update_script_collapse" class="box-body no-padding panel-collapse collapse">
+                                <div id="update_script"style="height:300px">{{ $mod->update_script }}</div>
+                            </div>
+
+                            <div class="box-footer hidden">
+                                {!! csrf_field() !!}
+                                <textarea name="update_script" class="hidden"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="box">
+                            <a data-toggle="collapse" href="#uninstall_script_collapse">
+                                <div class="box-header with-border">
+                                    <h3 class="box-title">Uninstall Script</h3>
+                                </div>
+                            </a>
+
+                            <div id="uninstall_script_collapse" class="box-body no-padding panel-collapse collapse">
+                                <div id="uninstall_script"style="height:300px">{{ $mod->uninstall_script }}</div>
+                            </div>
+
+                            <div class="box-footer hidden">
+                                {!! csrf_field() !!}
+                                <textarea name="uninstall_script" class="hidden"></textarea>
+                            </div>
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="box-body">
+                        <div class="row">
+                            <div class="form-group col-sm-6">
+                                <label class="control-label">Script Container</label>
+                                <input type="text" name="install_script_container" class="form-control" value="{{ $mod->install_script_container }}" />
+                                <p class="text-muted small">Docker container to use when running this script for the server. If empty, the server uses it's default container.</p>
+                            </div>
+                            <div class="form-group col-sm-6">
+                                <label class="control-label">Script Entrypoint Command</label>
+                                <input type="text" name="install_script_entry" class="form-control" value="{{ $mod->install_script_entry }}" />
+                                <p class="text-muted small">The entrypoint command to use for this script.</p>
                             </div>
                         </div>
                     </div>
@@ -124,20 +177,21 @@
                         <th>Node</th>
                         <th>Owner</th>
                     </tr>
-                    foreach($mod->servers as $server)
+
+                    @foreach($servers as $install)
                         <tr>
-                            <td><code> $server->uuidShort </code></td>
-                            <td><a href=" route('admin.servers.view', $server->id) "> $server->name </a></td>
-                            <td><a href=" route('admin.nodes.view', $server->node->id) "> $server->node->name </a></td>
-                            <td><a href=" route('admin.users.view', $server->user->id) "> $server->user->email </a></td>
+                            <td><code>{{ $install->server->uuidShort }}</code></td>
+                            <td><a href="{{ route('admin.servers.view', $install->server->id) }}">{{ $install->server->name }}</a></td>
+                            <td><a href="{{ route('admin.nodes.view', $install->server->node->id) }}">{{ $install->server->node->name }}</a></td>
+                            <td><a href="{{ route('admin.users.view', $install->server->user->id) }}">{{ $install->server->user->email }}</a></td>
                         </tr>
-                    endforeach
+                    @endforeach
                 </table>
             </div>
         </div>
     </div>
 </div>
-<div class="row">
+{{-- <div class="row">
     <div class="col-xs-6 col-md-5 col-md-offset-7 col-xs-offset-6">
         <form action="{{ route('admin.mods.view.export', $mod->id) }}" method="POST">
             {!! csrf_field() !!}
@@ -148,7 +202,7 @@
             <button type="submit" class="btn btn-sm pull-right muted muted-hover" style="margin-right:10px;">Export with Archive</button>
         </form>
     </div>
-</div>
+</div> --}}
 @endsection
 
 @section('footer-scripts')
@@ -159,6 +213,9 @@
     $(document).ready(function () {
 
         const InstallEditor = ace.edit('install_script');
+        const UpdateEditor = ace.edit('update_script');
+        const UninstallEditor = ace.edit('uninstall_script');
+
         const Modelist = ace.require('ace/ext/modelist')
 
         InstallEditor.setTheme('ace/theme/chrome');
@@ -166,9 +223,21 @@
         InstallEditor.getSession().setUseWrapMode(true);
         InstallEditor.setShowPrintMargin(false);
 
+        UpdateEditor.setTheme('ace/theme/chrome');
+        UpdateEditor.getSession().setMode('ace/mode/sh');
+        UpdateEditor.getSession().setUseWrapMode(true);
+        UpdateEditor.setShowPrintMargin(false);
+
+        UninstallEditor.setTheme('ace/theme/chrome');
+        UninstallEditor.getSession().setMode('ace/mode/sh');
+        UninstallEditor.getSession().setUseWrapMode(true);
+        UninstallEditor.setShowPrintMargin(false);
+
 
         $('form').on('submit', function (e) {
             $('textarea[name="install_script"]').val(InstallEditor.getValue());
+            $('textarea[name="update_script"]').val(UpdateEditor.getValue());
+            $('textarea[name="uninstall_script"]').val(UninstallEditor.getValue());
         });
     });
     </script>

@@ -31,7 +31,7 @@ class Mod extends Model implements CleansAttributes, ValidableContract
      * @var array
      */
     protected $fillable = [
-        'mod_id', 'name', 'comprehensive', 'steam_id', 'install_script', 'steam_username', 'steam_password',
+        'mod_id', 'egg_id', 'name', 'comprehensive', 'multiple', 'install_script', 'update_script', 'uninstall_script', 'install_script_container', 'install_script_entry',
     ];
 
     /**
@@ -40,10 +40,12 @@ class Mod extends Model implements CleansAttributes, ValidableContract
     protected static $applicationRules = [
         'name' => 'required',
         'comprehensive' => 'sometimes',
-        'steam_id' => 'sometimes',
+        'multiple' => 'sometimes',
         'install_script' => 'sometimes',
-        'steam_username' => 'sometimes',
-        'steam_password' => 'sometimes',
+        'update_script' => 'sometimes',
+        'uninstall_script' => 'sometimes',
+        'install_script_container' => 'required',
+        'install_script_entry' => 'required',
     ];
 
     /**
@@ -52,9 +54,12 @@ class Mod extends Model implements CleansAttributes, ValidableContract
     protected static $dataIntegrityRules = [
         'name' => 'string',
         'comprehensive' => 'boolean',
-        'steam_id' => 'nullable|string',
+        'multiple' => 'boolean',
         'install_script' => 'nullable|string',
+        'update_script' => 'nullable|string',
+        'uninstall_script' => 'nullable|string',
         'egg_id' => 'exists:eggs,id',
+        'mod_variable_id' => 'exists:mod_variable,id'
     ];
 
     /**
@@ -65,6 +70,7 @@ class Mod extends Model implements CleansAttributes, ValidableContract
     protected $casts = [
         'egg_id' => 'integer',
         'comprehensive' => 'boolean',
+        'multiple' => 'boolean',
     ];
 
     /**
@@ -91,6 +97,11 @@ class Mod extends Model implements CleansAttributes, ValidableContract
     public function mod_installed()
     {
         return $this->hasMany(Mod_installed::class);
+    }
+
+    public function mod_variable()
+    {
+        return $this->hasMany(Mod_variable::class);
     }
 
     public function nests()

@@ -18,8 +18,6 @@
 @endsection
 
 @section('content')
-                        {{$mods}} 
-
 
 <div class="row">
     <div class="col-xs-12">
@@ -43,8 +41,8 @@
                     <tbody>
                         <tr>
                             <th>ID</th>
-                            <th>Egg</th>
                             <th>Name</th>
+                            <th>Egg</th>
                             <th>Include Nest</th>
                         </tr>
                         @foreach ($mods as $mod)
@@ -52,19 +50,19 @@
                         {{$mod}} 
                              <tr>
                                 <td class="middle" data-toggle="tooltip" data-placement="right" title="{{ $mod->id }}"><code>{{ $mod->id }}</code></td>
-                                <td class="middle"><a href="{{ route('admin.mods.view', $mod->id) }}"> $mod->egg_id->name </a></td>
                                 <td class="middle"><code>{{ $mod->name }}</code></td>
+                                <td class="middle"><a href="{{ route('admin.mods.view', $mod->id) }}">{{ $mod->egg->name }}</a></td>
                                 <td class="middle"><code>{{ $mod->comprehensive }}</code></td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
             </div>
-            @if ($mods->hasPages())
+            {{-- @if ($mods->hasPages())
                 <div class="box-footer with-border">
                     <div class="col-md-12 text-center">{!! $mods->appends(['query' => Request::input('query')])->render() !!}</div>
                 </div>
-            @endif
+            @endif --}}
         </div>
     </div>
 </div>

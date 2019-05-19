@@ -114,7 +114,7 @@ class ModController extends Controller
     public function index(Request $request)
     {
         return view('admin.mods.index', [
-            'mods' => $this->repository->setSearchTerm($request->input('query'))->paginated(50),
+            'mods' => $this->repository->getWithEggs(), //->setSearchTerm($request->input('query'))->paginated(50),
         ]);
     }
 
@@ -180,6 +180,8 @@ class ModController extends Controller
         return view('admin.mods.view', [
             'mod' => $this->repository->getWithEggs($mod->id),
             'nests' => $this->serviceRepository->getWithEggs(),
+
+            'servers' =>$this->repository->getServers($mod->id)->mod_installed,
         ]);
     }
 
@@ -242,5 +244,20 @@ class ModController extends Controller
         return response()->download($filename, 'pack-' . $pack->name . '.json', [
             'Content-Type' => 'application/json',
         ])->deleteFileAfterSend(true);
+    }
+
+        /**
+     * Display pack view template to user.
+     *
+     * @param \Pterodactyl\Models\Pack $pack
+     * @return \Illuminate\View\View
+     * @throws \Pterodactyl\Exceptions\Repository\RecordNotFoundException
+     */
+    public function variables(Mod $mod)
+    {
+        return view('admin.mods.variables', [
+            'mod' => $this->repository->getWithVars($mod->id),
+            'nests' => $this->serviceRepository->getWithEggs(),
+        ]);
     }
 }

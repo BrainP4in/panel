@@ -46,4 +46,23 @@ interface ModRepositoryInterface extends RepositoryInterface, SearchableInterfac
      */
     public function getAvailable(int $serverId, int $nestId);
 
+
+
+    /**
+     * Return a nest or all nests and the count of eggs, packs, and servers for that nest.
+     *
+     * @param int|null $id
+     * @return \Pterodactyl\Models\Nest|\Illuminate\Database\Eloquent\Collection
+     *
+     * @throws \Pterodactyl\Exceptions\Repository\RecordNotFoundException
+     */
+    public function getServers(int $modId);
+
+
+
+
+
+    
+
+
 }
